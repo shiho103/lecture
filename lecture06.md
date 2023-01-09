@@ -1,13 +1,11 @@
 # 第6回課題
-- CloudTrailイベント（利用記録3件）
+- CloudTrailイベントとその内容3件
+  - StopInstances：EC2インスタンスの停止  
+   1."type": "IAMUser"  
+   2."eventTime": "2023-01-07T16:07:53Z"  
+   3."eventSource": "ec2.amazonaws.com"
 
-  1.StopInstances：EC2インスタンスの停止
-  
-  2.StartDBInstance：RDSの開始
-
-  3.StartLogging：ログ取得の開始
-
-  ![イベント履歴](https://user-images.githubusercontent.com/114926650/211283915-1a7b4e87-808e-40dd-93b5-78e4b6d62e48.png)
+  ![イベント履歴](https://user-images.githubusercontent.com/114926650/211324476-b44afe9d-9865-455e-aa48-5881b4eb6607.png)
 
 - CloudWatch アラームとアクションを設定した状態で、Rails アプリケーションが使える、使えない状態にして、動作を確認
   ![アラーム状態](https://user-images.githubusercontent.com/114926650/211284447-5b83a543-5179-4cdd-87f8-974cbb515468.png)
