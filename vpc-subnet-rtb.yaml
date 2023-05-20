@@ -1,0 +1,128 @@
+AWSTemplateFormatVersion: '2010-09-09'
+
+Resources:
+  # サブネットを作成する
+  PublicSubnetA:
+    Type: AWS::EC2::Subnet
+    Properties:
+      AvailabilityZone: ap-northeast-1a
+      CidrBlock: 10.0.0.0/20
+      # このサブネット内のEC2起動時にパブリックIPアドレスを割り当てる
+      MapPublicIpOnLaunch: true
+      VpcId: !ImportValue raise-vpc-id   # VPCのIDをインポート
+      Tags:
+        - Key: Name
+          Value: raise-public1-subnet-a
+
+  PublicSubnetC:
+    Type: AWS::EC2::Subnet
+    Properties:
+      AvailabilityZone: ap-northeast-1c
+      CidrBlock: 10.0.16.0/20
+      # このサブネット内のEC2起動時にパブリックIPアドレスを割り当てる
+      MapPublicIpOnLaunch: true
+      VpcId: !ImportValue raise-vpc-id
+      Tags:
+        - Key: Name
+          Value: raise-public2-subnet-c
+
+  PrivateSubnetA:
+    Type: AWS::EC2::Subnet
+    Properties:
+      AvailabilityZone: ap-northeast-1a
+      CidrBlock: # プライベート　IPv4 CIDR入力
+      VpcId: !ImportValue raise-vpc-id
+      Tags:
+        - Key: Name
+          Value: raise-private1-subnet-a
+
+  PrivateSubnetC:
+    Type: AWS::EC2::Subnet
+    Properties:
+      AvailabilityZone: ap-northeast-1c
+      CidrBlock: # プライベート　IPv4 CIDR入力
+      VpcId: !ImportValue raise-vpc-id
+      Tags:
+        - Key: Name
+          Value: raise-private2-subnet-c
+
+  # ルートテーブルを作成する
+  PublicRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !ImportValue raise-vpc-id
+      Tags:
+        - Key: Name
+          Value: raise-public-rtb
+
+  PrivateRouteTableA:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !ImportValue raise-vpc-id
+      Tags:
+        - Key: Name
+          Value: raise-pribate1-rtb-a
+
+  PrivateRouteTableC:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !ImportValue raise-vpc-id
+      Tags:
+        - Key: Name
+          Value: raise-pribate2-rtb-c
+
+  # ルートテーブルのデフォルトルート（インターネットへの出口）を作成する
+  PublicDefaultRoute:
+    Type: AWS::EC2::Route
+    Properties:
+      RouteTableId: !Ref PublicRouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      # インターネットゲートウェイのIDをインポート
+      GatewayId: !ImportValue raise-igw-id
+
+  # ルートテーブルとサブネットを関連付ける
+  PublicSubnetRouteTableAssociationA:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref PublicSubnetA
+      RouteTableId: !Ref PublicRouteTable
+
+  PublicSubnetRouteTableAssociationC:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref PublicSubnetC
+      RouteTableId: !Ref PublicRouteTable
+
+  PrivateSubnetRouteTableAssociationA:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref PrivateSubnetA
+      RouteTableId: !Ref PrivateRouteTableA
+
+  PrivateSubnetRouteTableAssociationC:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref PrivateSubnetC
+      RouteTableId: !Ref PrivateRouteTableC
+Outputs:
+  # 作成したサブネットのIDをエクスポートする
+  PublicSubnetA:
+    Value: !Ref PublicSubnetA
+    Export:
+      Name: raise-public1-subnet-a-id
+
+  PublicSubnetC:
+    Value: !Ref PublicSubnetC
+    Export:
+      Name: raise-public2-subnet-c-id
+
+  PrivateSubnetA:
+    Value: !Ref PrivateSubnetA
+    Export:
+      Name: raise-private1-subnet-a-id
+
+  PrivateSubnetC:
+    Value: !Ref PrivateSubnetC
+    Export:
+      Name: raise-private2-subnet-c-id
+

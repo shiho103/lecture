@@ -1,0 +1,105 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Resources:
+  # 公開用EC2インスタンスを作成する
+  RaisePublicEc2Instance:
+    Type: AWS::EC2::Instance
+    Properties:
+      ImageId: ami-0de5311b2a443fb89
+      InstanceType: t2.micro
+      AvailabilityZone: ap-northeast-1a
+      KeyName: raise230508
+      # 既存のIAMロールの付与（S3への接続）
+      IamInstanceProfile: !Ref RaisePublicEc2InstanceProfile
+      # ストレージを作成する
+      BlockDeviceMappings:
+        - DeviceName: /dev/xvda
+          Ebs:
+            DeleteOnTermination: true
+            VolumeType: gp2
+            VolumeSize: 8
+      # ネットワークインタフェース
+      NetworkInterfaces:
+        - AssociatePublicIpAddress: true
+          DeviceIndex: '0'
+          SubnetId: !ImportValue raise-public1-subnet-a-id
+          # セキュリティグループ設定、NetworkInterfaceの設定をする際はSecurityGroupIdsの項目は使用不可
+          GroupSet:
+           - !ImportValue raise-ec2-sg
+           - !ImportValue raise-ec2-sg-pri
+      Tags:
+        - Key: Name
+          Value: raise-pub-ec2-instance
+  # 既存のIAMロールの記載
+  RaisePublicEc2InstanceProfile:
+    Type: AWS::IAM::InstanceProfile
+    Properties:
+      Path: /
+      Roles:
+      - S3
+
+
+  #ALB作成
+  RaiseALB:
+    Type: AWS::ElasticLoadBalancingV2::LoadBalancer
+    Properties:
+      Name: raise-alb
+      Scheme: internet-facing
+      Type: application
+      Subnets: 
+      - !ImportValue raise-public1-subnet-a-id
+      - !ImportValue raise-public2-subnet-c-id
+      SecurityGroups: 
+      - !ImportValue raise-alb-sg
+      IpAddressType: ipv4
+      Tags:
+      -
+        Key: Name
+        Value: raise-alb
+
+#ターゲットグループ作成
+  RaiseTargetGroup:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      Name: raise-TG
+      VpcId: !ImportValue raise-vpc-id
+      Protocol: HTTP
+      ProtocolVersion: HTTP1
+      Port: 80
+      TargetType: instance
+      Targets: 
+      - 
+        Id: !Ref RaisePublicEc2Instance
+        Port: 80
+      HealthCheckEnabled: true
+      HealthCheckIntervalSeconds: 30
+      HealthCheckPath: /
+      HealthCheckPort: traffic-port
+      HealthCheckProtocol: HTTP
+      HealthCheckTimeoutSeconds: 5
+      HealthyThresholdCount: 5
+      UnhealthyThresholdCount: 2
+      Matcher: 
+        HttpCode: 200
+      Tags:
+      -
+        Key: Name
+        Value: raise-TG
+
+#リスナー設定
+  RaiseListener:
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    Properties:
+      LoadBalancerArn: !Ref RaiseALB
+      Port: 80
+      Protocol: HTTP
+      DefaultActions: 
+      - Type: forward
+        TargetGroupArn: !Ref RaiseTargetGroup
+        
+
+#Outputsセクション設定  
+Outputs:
+  ALBOutput1:
+    Value: !GetAtt RaiseALB.DNSName
+    Export:
+      Name: raise-alb-dnsname

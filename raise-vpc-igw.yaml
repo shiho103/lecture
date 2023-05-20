@@ -1,0 +1,45 @@
+AWSTemplateFormatVersion: '2010-09-09'
+
+Description:
+  test-vpc
+
+Resources:
+  # VPCを作成する
+  RaiseVpc:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: 10.0.0.0/16
+      EnableDnsSupport: true
+      EnableDnsHostnames: true
+      InstanceTenancy: default
+      Tags:
+        - Key: Name
+          Value: raise-vpc
+
+  # インターネットゲートウェイを作成する
+  RaiseInetGateway:
+    Type: AWS::EC2::InternetGateway
+    Properties:
+      Tags:
+      - Key: Name
+        Value: raise-igw
+
+  # 作成したVPCとインターネットゲートウェイを関連付ける
+  RaiseVpcGatewayAttachment:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      InternetGatewayId: !Ref RaiseInetGateway
+      VpcId: !Ref RaiseVpc
+
+Outputs:
+  # 作成したVPCのIDをエクスポートする
+  RaiseVpc:
+    Value: !Ref RaiseVpc
+    Export:
+      Name: raise-vpc-id
+  # 作成したインターネットゲートウェイのIDをエクスポートする
+  RaiseInetGateway:
+    Value: !Ref RaiseInetGateway
+    Export:
+      Name: raise-igw-id
+      

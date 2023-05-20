@@ -1,0 +1,136 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Resources:
+  # EC2のセキュリティグループを作成する
+  RaiseEc2SecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName: raise-ec2-sg
+      GroupDescription: SecurityGroup for Public EC2 instances
+      # VPCのIDをインポートして設定する
+      VpcId: !ImportValue raise-vpc-id  
+      # アウトバウンドのルールを作成する
+      SecurityGroupEgress:
+        - IpProtocol: -1
+          CidrIp: 0.0.0.0/0
+      # インバウンドのルールを作成する
+      SecurityGroupIngress:
+      # インターネットからのHTTP通信を受信する
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: 0.0.0.0/0
+      # ssh
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          # Systems Managerのパラメータストア参照
+          CidrIp: '{{resolve:ssm:MyIP:1}}'
+        - IpProtocol: tcp
+          FromPort: 443
+          ToPort: 443
+          CidrIp: 0.0.0.0/0
+      # 開発環境用
+        - IpProtocol: tcp
+          FromPort: 3000
+          ToPort: 3000
+          CidrIp: 0.0.0.0/0
+      # unicornデフォルト
+        - IpProtocol: tcp
+          FromPort: 8080
+          ToPort: 8080
+          CidrIp: 0.0.0.0/0
+      # Mysql
+      # - IpProtocol: tcp
+        # FromPort: 3306
+        # ToPort: 3306
+        # CidrIp: 
+      # Mysql
+      # - IpProtocol: tcp
+        # FromPort: 3306
+        # ToPort: 3306
+        # CidrIp: 
+      Tags:
+        - Key: Name
+          Value: raise-ec2-sg
+  RaiseEc2SecurityGroupPrivate:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName: raise-ec2-sg-pri
+      GroupDescription: SecurityGroup for Private RDS instances
+      VpcId: !ImportValue raise-vpc-id
+      Tags:
+        - Key: Name
+          Value: raise-ec2-sg-pri
+  # 循環参照のためのアウトバウンドのルールを作成する
+  RaiseEc2SecurityGroupPrivateEgress:
+    Type: AWS::EC2::SecurityGroupEgress
+    Properties:
+      Description: EC2 Security Group for RDS
+      GroupId: !Ref RaiseEc2SecurityGroupPrivate
+      # Mysql
+      IpProtocol: tcp
+      FromPort: 3306
+      ToPort: 3306
+      SourceSecurityGroupId: !Ref RaiseRDSSecurityGroup
+      # インバウンドのルールを作成する
+      # SecurityGroupIngress:
+      
+  # ALBのセキュリティグループを作成する
+  RaiseALBSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName: raise-alb-sg
+      GroupDescription: SecurityGroup for ALB
+      VpcId: !ImportValue raise-vpc-id 
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: 443
+          ToPort: 443
+          CidrIp: 0.0.0.0/0
+      Tags:
+        - Key: Name
+          Value: raise-alb-sg
+  # RDSのセキュリティグループを作成する
+  RaiseRDSSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName: raise-rds-sg
+      GroupDescription: SecurityGroup for RDS
+      VpcId: !ImportValue raise-vpc-id 
+      # デフォルトでアウトバウンドルール0.0.0.0/0が作成されてしまうため、自分のIPを設定
+      SecurityGroupEgress:
+        - IpProtocol: -1
+        # Systems Managerのパラメータストア参照
+          CidrIp: '{{resolve:ssm:MyIP:1}}'
+      # インバウンドのルールを作成する    
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 3306
+          ToPort: 3306
+          #EC2用セキュリティグループからの3306番ポートアクセスを許可
+          SourceSecurityGroupId: !Ref RaiseEc2SecurityGroupPrivate
+      Tags:
+        - Key: Name
+          Value: raise-rds-sg
+Outputs :
+  RaiseEc2SecurityGroup:
+    Value: !Ref RaiseEc2SecurityGroup
+    Export:
+      Name: raise-ec2-sg
+  RaiseEc2SecurityGroupPrivate:
+    Value: !Ref RaiseEc2SecurityGroupPrivate
+    Export:
+      Name: raise-ec2-sg-pri
+  RaiseALBSecurityGroup:
+    Value: !Ref RaiseALBSecurityGroup
+    Export:
+      Name: raise-alb-sg
+  RaiseRDSSecurityGroup:
+    Value: !Ref RaiseRDSSecurityGroup
+    Export:
+      Name: raise-rds-sg
+  
