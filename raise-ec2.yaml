@@ -36,8 +36,6 @@ Resources:
       Path: /
       Roles:
       - S3
-
-
   #ALB作成
   RaiseALB:
     Type: AWS::ElasticLoadBalancingV2::LoadBalancer
@@ -55,7 +53,6 @@ Resources:
       -
         Key: Name
         Value: raise-alb
-
 #ターゲットグループ作成
   RaiseTargetGroup:
     Type: AWS::ElasticLoadBalancingV2::TargetGroup
@@ -84,7 +81,6 @@ Resources:
       -
         Key: Name
         Value: raise-TG
-
 #リスナー設定
   RaiseListener:
     Type: AWS::ElasticLoadBalancingV2::Listener
@@ -95,8 +91,6 @@ Resources:
       DefaultActions: 
       - Type: forward
         TargetGroupArn: !Ref RaiseTargetGroup
-        
-
 #Outputsセクション設定  
 Outputs:
   ALBOutput1:

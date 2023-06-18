@@ -1,8 +1,6 @@
 AWSTemplateFormatVersion: '2010-09-09'
-
 Description:
   test-vpc
-
 Resources:
   # VPCを作成する
   RaiseVpc:
@@ -15,7 +13,6 @@ Resources:
       Tags:
         - Key: Name
           Value: raise-vpc
-
   # インターネットゲートウェイを作成する
   RaiseInetGateway:
     Type: AWS::EC2::InternetGateway
@@ -23,14 +20,12 @@ Resources:
       Tags:
       - Key: Name
         Value: raise-igw
-
   # 作成したVPCとインターネットゲートウェイを関連付ける
   RaiseVpcGatewayAttachment:
     Type: AWS::EC2::VPCGatewayAttachment
     Properties:
       InternetGatewayId: !Ref RaiseInetGateway
       VpcId: !Ref RaiseVpc
-
 Outputs:
   # 作成したVPCのIDをエクスポートする
   RaiseVpc:

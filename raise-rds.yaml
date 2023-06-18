@@ -13,7 +13,6 @@ Resources:
       -
         Key: Name
         Value: raise_dbsubnet
-
 #RDSインスタンス作成
   RaiseRDS:
     Type: AWS::RDS::DBInstance

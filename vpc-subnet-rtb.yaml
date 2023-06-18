@@ -1,5 +1,4 @@
 AWSTemplateFormatVersion: '2010-09-09'
-
 Resources:
   # サブネットを作成する
   PublicSubnetA:
@@ -45,7 +44,6 @@ Resources:
       Tags:
         - Key: Name
           Value: raise-private2-subnet-c
-
   # ルートテーブルを作成する
   PublicRouteTable:
     Type: AWS::EC2::RouteTable
@@ -70,7 +68,6 @@ Resources:
       Tags:
         - Key: Name
           Value: raise-pribate2-rtb-c
-
   # ルートテーブルのデフォルトルート（インターネットへの出口）を作成する
   PublicDefaultRoute:
     Type: AWS::EC2::Route
@@ -79,7 +76,6 @@ Resources:
       DestinationCidrBlock: 0.0.0.0/0
       # インターネットゲートウェイのIDをインポート
       GatewayId: !ImportValue raise-igw-id
-
   # ルートテーブルとサブネットを関連付ける
   PublicSubnetRouteTableAssociationA:
     Type: AWS::EC2::SubnetRouteTableAssociation
