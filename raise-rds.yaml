@@ -1,0 +1,44 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Resources:
+#サブネットグループ作成
+  RaiseRDSSubnetGroup:
+    Type: AWS::RDS::DBSubnetGroup
+    Properties:
+      DBSubnetGroupDescription: "dedicated to raise-rds"
+      DBSubnetGroupName: raise_dbsubnet
+      SubnetIds:
+      - !ImportValue raise-private1-subnet-a-id
+      - !ImportValue raise-private2-subnet-c-id
+      Tags:
+      -
+        Key: Name
+        Value: raise_dbsubnet
+#RDSインスタンス作成
+  RaiseRDS:
+    Type: AWS::RDS::DBInstance
+    Properties:
+      DBInstanceIdentifier: raise-rds
+      DBInstanceClass: db.t2.micro
+      Engine: mysql
+      EngineVersion: 8.0.32
+      MasterUsername: admin
+      # パスワードはテンプレートに直接入力しない
+      MasterUserPassword: '{{resolve:ssm:raiseMasterPass:1}}'
+      # DBNameに「-（ハイフン）」は入力しない（エラーになる）
+      DBName: raiserds
+      BackupRetentionPeriod: 0
+      MultiAZ: false
+      PubliclyAccessible: false
+      StorageType: gp2
+      AllocatedStorage: 20
+      StorageEncrypted: false
+      CopyTagsToSnapshot: false
+      DeletionProtection: false
+      DeleteAutomatedBackups: true
+      DBSubnetGroupName: !Ref RaiseRDSSubnetGroup
+      VPCSecurityGroups:
+      - !ImportValue raise-rds-sg
+      Tags:
+      -
+        Key: Name
+        Value: raise-rds

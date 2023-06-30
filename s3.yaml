@@ -1,0 +1,21 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Resources:
+  RaiseS3Bucket:
+  #S3バケット作成
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: raise-s3bucket
+      BucketEncryption:
+        ServerSideEncryptionConfiguration: 
+          - ServerSideEncryptionByDefault: 
+              SSEAlgorithm: AES256
+      PublicAccessBlockConfiguration: 
+        BlockPublicAcls: false
+        BlockPublicPolicy: false
+        IgnorePublicAcls: false
+        RestrictPublicBuckets: false
+      AccessControl: Private
+      Tags:
+      -
+        Key: Name
+        Value: raise-s3bucket
